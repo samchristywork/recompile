@@ -30,7 +30,7 @@ func runBuild(command string) {
 	}
 }
 
-func watch(watcher *fsnotify.Watcher, command string) {
+func watch(watcher *fsnotify.Watcher, command string, ignoreDirs []string) {
 	for {
 		select {
 		case event, ok := <-watcher.Events:
@@ -39,6 +39,17 @@ func watch(watcher *fsnotify.Watcher, command string) {
 			}
 
 			if strings.HasSuffix(event.Name, "~") {
+				continue
+			}
+
+			ignoreFlag := false
+			for _, ignore := range ignoreDirs {
+				if strings.Contains(event.Name, ignore) {
+					//fmt.Println("Ignoring file or directory: " + event.Name)
+					ignoreFlag = true
+				}
+			}
+			if ignoreFlag {
 				continue
 			}
 
@@ -59,6 +70,13 @@ func watch(watcher *fsnotify.Watcher, command string) {
 func main() {
 	command := flag.String("command", "go build ./...", "Command to run")
 
+	ignoreDirs := []string{".git", ".cache"}
+	flag.Func("ignore", "Directory to ignore", func(s string) error {
+		fmt.Println("Ignoring file or directory: " + s)
+		ignoreDirs = append(ignoreDirs, s)
+		return nil
+	})
+
 	flag.Parse()
 
 	watcher, err := fsnotify.NewWatcher()
@@ -67,7 +85,7 @@ func main() {
 	}
 	defer watcher.Close()
 
-	go watch(watcher, *command)
+	go watch(watcher, *command, ignoreDirs)
 
 	err = filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
