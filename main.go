@@ -30,7 +30,7 @@ func runBuild(command string) {
 	}
 }
 
-func watch(watcher *fsnotify.Watcher, command string, ignoreDirs []string) {
+func watch(watcher *fsnotify.Watcher, command string, ignore []string) {
 	for {
 		select {
 		case event, ok := <-watcher.Events:
@@ -43,7 +43,7 @@ func watch(watcher *fsnotify.Watcher, command string, ignoreDirs []string) {
 			}
 
 			ignoreFlag := false
-			for _, ignore := range ignoreDirs {
+			for _, ignore := range ignore {
 				if strings.Contains(event.Name, ignore) {
 					//fmt.Println("Ignoring file or directory: " + event.Name)
 					ignoreFlag = true
@@ -53,7 +53,9 @@ func watch(watcher *fsnotify.Watcher, command string, ignoreDirs []string) {
 				continue
 			}
 
-			if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create || event.Op&fsnotify.Remove == fsnotify.Remove {
+			if event.Op&fsnotify.Write == fsnotify.Write ||
+				event.Op&fsnotify.Create == fsnotify.Create ||
+				event.Op&fsnotify.Remove == fsnotify.Remove {
 				fmt.Printf(Grey+"Detected change in file: %s"+Reset+"\n", event.Name)
 				runBuild(command)
 			}
@@ -70,10 +72,10 @@ func watch(watcher *fsnotify.Watcher, command string, ignoreDirs []string) {
 func main() {
 	command := flag.String("command", "go build ./...", "Command to run")
 
-	ignoreDirs := []string{".git", ".cache"}
-	flag.Func("ignore", "Directory to ignore", func(s string) error {
+	ignore := []string{".git", ".cache"}
+	flag.Func("ignore", "File or directory to ignore", func(s string) error {
 		fmt.Println("Ignoring file or directory: " + s)
-		ignoreDirs = append(ignoreDirs, s)
+		ignore = append(ignore, s)
 		return nil
 	})
 
@@ -85,7 +87,7 @@ func main() {
 	}
 	defer watcher.Close()
 
-	go watch(watcher, *command, ignoreDirs)
+	go watch(watcher, *command, ignore)
 
 	err = filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -105,7 +107,11 @@ func main() {
 	runBuild(*command)
 
 	for {
-		fmt.Scanln()
+		_, err := fmt.Scanln()
+		if err != nil {
+			fmt.Println("Error reading from stdin: ", err)
+			break
+		}
 		runBuild(*command)
 	}
 }
