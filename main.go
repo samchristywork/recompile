@@ -12,7 +12,6 @@ import (
 )
 
 const (
-	White = "\033[0m"
 	Red   = "\033[31m"
 	Grey  = "\033[90m"
 	Reset = "\033[0m"
@@ -23,8 +22,8 @@ func runBuild(command string) {
 
 	stderr, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Println(White + "Errors found:")
-		fmt.Println(White + string(stderr) + Reset)
+		fmt.Println(Red + "Errors found:")
+		fmt.Println(Red + string(stderr) + Reset)
 	} else {
 		fmt.Println(Grey + "Build successful, no errors found." + Reset)
 	}
