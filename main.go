@@ -42,10 +42,15 @@ func watch(watcher *fsnotify.Watcher, command string, ignore []string) {
 			}
 
 			ignoreFlag := false
-			for _, ignore := range ignore {
-				if strings.Contains(event.Name, ignore) {
-					//fmt.Println("Ignoring file or directory: " + event.Name)
-					ignoreFlag = true
+			for _, ig := range ignore {
+				for _, part := range strings.Split(event.Name, string(filepath.Separator)) {
+					if part == ig {
+						ignoreFlag = true
+						break
+					}
+				}
+				if ignoreFlag {
+					break
 				}
 			}
 			if ignoreFlag {
