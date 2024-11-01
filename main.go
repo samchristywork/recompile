@@ -99,6 +99,11 @@ func main() {
 		}
 
 		if info.IsDir() {
+			for _, ig := range ignore {
+				if filepath.Base(path) == ig {
+					return filepath.SkipDir
+				}
+			}
 			return watcher.Add(path)
 		}
 		return nil
