@@ -7,8 +7,10 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 const (
@@ -118,12 +120,7 @@ func main() {
 	fmt.Println(Grey + "Watching for changes..." + Reset)
 	runBuild(*command)
 
-	for {
-		_, err := fmt.Scanln()
-		if err != nil {
-			fmt.Println("Error reading from stdin: ", err)
-			break
-		}
-		runBuild(*command)
-	}
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+	<-quit
 }
