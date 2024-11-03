@@ -20,12 +20,15 @@ const (
 func runBuild(command string) {
 	cmd := exec.Command("sh", "-c", command)
 
-	stderr, err := cmd.CombinedOutput()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(Red + "Errors found:")
-		fmt.Println(Red + string(stderr) + Reset)
+		fmt.Println(Red + string(output) + Reset)
 	} else {
 		fmt.Println(Grey + "Build successful, no errors found." + Reset)
+		if len(output) > 0 {
+			fmt.Print(string(output))
+		}
 	}
 }
 
