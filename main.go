@@ -34,6 +34,17 @@ func runBuild(command string) {
 	}
 }
 
+func isIgnored(path string, ignore []string) bool {
+	for _, ig := range ignore {
+		for _, part := range strings.Split(path, string(filepath.Separator)) {
+			if part == ig {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func watch(watcher *fsnotify.Watcher, command string, ignore []string) {
 	for {
 		select {
@@ -46,19 +57,7 @@ func watch(watcher *fsnotify.Watcher, command string, ignore []string) {
 				continue
 			}
 
-			ignoreFlag := false
-			for _, ig := range ignore {
-				for _, part := range strings.Split(event.Name, string(filepath.Separator)) {
-					if part == ig {
-						ignoreFlag = true
-						break
-					}
-				}
-				if ignoreFlag {
-					break
-				}
-			}
-			if ignoreFlag {
+			if isIgnored(event.Name, ignore) {
 				continue
 			}
 
